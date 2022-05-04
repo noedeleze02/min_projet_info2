@@ -16,10 +16,21 @@ df_chomage = df_chomage.replace(obs_status)
 #remplacer les codes POP1564 dans le dataframe
 ##erwp = {'0':'Autres personnes','1':'Personnes actives'}
 ##df_chomage['ERWP'] = df_chomage.replace(erwp)
-print(df_chomage)
 #verfier s'il y a des données pour toutes les années (2010 à 2020)
 for i in range(2010, 2021):
     if any(df_chomage.TIME_PERIOD == i):
         print("Il y a des données pour l'année", i)
     else:
         print("Attention ! Les données de l'année", i, "ne sont pas complètes.")
+        
+        
+#enlever les colonnes inutiles pour le graphique
+del df_chomage['ERWP'], df_chomage['ERWL'], df_chomage['POP1564'], df_chomage['OBS_CONFIDENCE'], df_chomage['OBS_STATUS']
+
+#trouver la liste de tous les cantons
+liste_cantons = []
+for canton in df_chomage['GEO'].tolist():
+    if canton not in liste_cantons:
+        liste_cantons.append (canton)
+
+print(df_chomage, liste_cantons)
