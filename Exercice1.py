@@ -10,12 +10,7 @@ df_chomage = df_chomage.replace(unit)
 #remplacer les codes Obs_Status dans le dataframe
 obs_status = {'A':'Valeur normales','L':'Valeur confidentielle','U':'Faible fiabilité'}
 df_chomage = df_chomage.replace(obs_status)
-#remplacer les codes POP1564 dans le dataframe
-##pop = {'1':'Pop. résid. perm. de 15 à 64 ans'}
-##df_chomage = df_chomage['POP1564'].replace(pop)
-#remplacer les codes POP1564 dans le dataframe
-##erwp = {'0':'Autres personnes','1':'Personnes actives'}
-##df_chomage['ERWP'] = df_chomage.replace(erwp)
+
 #verfier s'il y a des données pour toutes les années (2010 à 2020)
 for i in range(2010, 2021):
     if any(df_chomage.TIME_PERIOD == i):
@@ -24,13 +19,30 @@ for i in range(2010, 2021):
         print("Attention ! Les données de l'année", i, "ne sont pas complètes.")
         
         
-#enlever les colonnes inutiles pour le graphique
-del df_chomage['ERWP'], df_chomage['ERWL'], df_chomage['POP1564'], df_chomage['OBS_CONFIDENCE'], df_chomage['OBS_STATUS']
+#traitement données canton de Vaud
+df_vaud = df_chomage.query("GEO=='Vaud'")
 
-#trouver la liste de tous les cantons
-liste_cantons = []
-for canton in df_chomage['GEO'].tolist():
-    if canton not in liste_cantons:
-        liste_cantons.append (canton)
+chomeurs_num= df_vaud.query("ERWL=='1' and UNIT_MEA =='Nombre de personnes'")
+liste_chomeurs = chomeurs_num['OBS_VALUE'].tolist()
 
-print(df_chomage, liste_cantons)
+Population = df_vaud.query("POP1564=='Total' and ERWP =='Total' and UNIT_MEA=='Nombre de personnes'")
+
+Population['chomeurs']= liste_chomeurs
+
+Population['reste_popu'] = Population['OBS_VALUE']-Population['chomeurs']
+
+reste_popu = Population['reste_popu']
+annees = Population['TIME_PERIOD']
+
+#création graphique                        
+import matplotlib.pyplot as plt
+
+plt.title('Chômeurs vs Population Vaudoise')
+plt.xlabel('Années')
+plt.ylabel('Nombre de personnes')
+plt.bar(annees, liste_chomeurs, label='personnes au chomage', color ='r')
+plt.bar(annees, reste_popu, bottom=liste_chomeurs, label ='reste de la population', color = 'b')
+plt.legend()
+plt.show()
+
+
