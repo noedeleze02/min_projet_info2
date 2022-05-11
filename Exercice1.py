@@ -37,7 +37,7 @@ annees = Population['TIME_PERIOD']
 #création graphique                        
 import matplotlib.pyplot as plt
 
-plt.title('Chômeurs vs Population Vaudoise')
+plt.title('Chômeurs vs Population Vaudoise', fontsize = 18)
 plt.xlabel('Années')
 plt.ylabel('Nombre de personnes')
 plt.bar(annees, liste_chomeurs, label='personnes au chomage', color ='r')
@@ -47,7 +47,7 @@ plt.show()
 
 
 ## Création graphique 2
-plt.title('Evolution du chômage dans le canton de Vaud')
+plt.title('Evolution du chômage dans le canton de Vaud', fontsize = 18)
 plt.xlabel('Années')
 plt.ylabel('Nombre de personnes')
 plt.plot(annees, liste_chomeurs, color = 'r')
