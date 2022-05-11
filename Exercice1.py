@@ -46,3 +46,9 @@ plt.legend()
 plt.show()
 
 
+## Création graphique 2
+plt.title('Evolution du chômage dans le canton de Vaud')
+plt.xlabel('Années')
+plt.ylabel('Nombre de personnes')
+plt.plot(annees, liste_chomeurs, color = 'r')
+plt.show()
