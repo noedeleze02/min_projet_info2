@@ -1,7 +1,18 @@
-###         PARTIE 1
-
+##  étape 1
 
 import pandas as pd
+#importation des widgets
+from ipywidgets import widgets
+from ipywidgets import interact
+#création des widgets
+import pygal
+# affichage pygal dans notebook
+from IPython.display import display, HTML
+base_html = """
+  <!DOCTYPE html><html><head><script type="text/javascript" src="https://kozea.github.io/pygal.js/2.0.x/pygal-tooltips.min.js""></script></head>
+  <body><figure>{rendered_chart}</figure></body></html>
+"""
+
 
 #importation du fichier csv pour convertir en dataframe et traiter les données
 df_chomage = pd.read_csv("https://www.bfs.admin.ch/bfsstatic/dam/assets/20964153/master", sep = ';')
@@ -37,19 +48,8 @@ df_erwp = df_erwp.replace(erwp)
 df_chomage['ERWP'] = df_erwp
 
 
+###   étape 2
 
-#verfier s'il y a des données pour toutes les années (2010 à 2020)
-for i in range(2010, 2021):
-    if any(df_chomage.TIME_PERIOD == i):
-        print("Il y a des données pour l'année", i)
-    else:
-        print("Attention ! Les données de l'année", i, "ne sont pas complètes.")
-        
-
-print(df_chomage.query("UNIT_MEA =='Nombre de ménages'"))   
-
-
-###         PARTIE 2
 #traitement données canton de Vaud
 df_vaud = df_chomage.query("GEO=='Vaud'")
 
@@ -65,7 +65,7 @@ Population['reste_popu'] = Population['OBS_VALUE']-Population['chomeurs']
 reste_popu = Population['reste_popu']
 annees = Population['TIME_PERIOD']
 
-#création graphique                        
+#création graphique 1                      
 import matplotlib.pyplot as plt
 
 plt.title('Chômeurs vs Population Vaudoise', fontsize = 18)
@@ -85,47 +85,15 @@ plt.plot(annees, liste_chomeurs, color = 'r')
 plt.show()
 
 
-##  PARTIE 3
+###   étape 3
+
 ## a partir de cette étape, les données sur la population active ne sont plus utiles
 df_chomage = df_chomage.drop(columns=['ERWP'])
 
-#importation des widgets
-from ipywidgets import widgets
-#création des widgets
-a = widgets.RadioButtons(options = ['EN', 'FR', 'DE','IT'], description = 'Langue:', disabled = False)
-b = widgets.IntSlider(min = 2010, max = 2020, step = 1, description = 'time', disabled = False, orientation = 'horizontal')
-c = widgets.Dropdown(options = ['Nombre de personnes', 'Nombre de ménages','Pourcentage de personnes'], description = 'unit', disabled = False)
-d = widgets.Dropdown(options = ['Pop. résid. perm. de 15 à 64 ans', 'Total'], description = 'population')
-e = widgets.Dropdown(options = ['Autres personnes', 'Personnes au chômage', 'Total'], description = 'chomage')
-#affichage des widgets
-display(a)
-display(b)
-display(c)
-display(d)
-display(e)
-
-
-import pygal
-# affichage pygal dans notebook
-from IPython.display import display, HTML
-base_html = """
-  <!DOCTYPE html><html><head><script type="text/javascript" src="https://kozea.github.io/pygal.js/2.0.x/pygal-tooltips.min.js""></script></head>
-  <body><figure>{rendered_chart}</figure></body></html>
-"""
 
 
 # ajout de données à afficher (un dictionnaire contenant comme key le code du canton : la valeur)
 
-langue = a.value
-annee = b.value
-unité = c.value
-population = d.value
-chomage = e.value
-
-if unité == 'Nombre de ménages':
-    print("Désolé nous n'avons pas de données pour cette population")
-else:
-    df_chomage_precis = df_chomage.query("TIME_PERIOD==@annee and UNIT_MEA == @unité and POP1564 == @population and ERWL == @chomage")
 
 cantons_dict = {'Zoug': 'kt-zg', 'Vaud': 'kt-vd', 'Valais': 'kt-vs', 'Genève': 'kt-ge', 'Berne': 'kt-be',
                 'Fribourg': 'kt-fr', 'Soleure': 'kt-so', 'Neuchâtel': 'kt-ne', 'Jura': 'kt-ju', 'Bâle-Ville': 'kt-bs',
@@ -134,30 +102,33 @@ cantons_dict = {'Zoug': 'kt-zg', 'Vaud': 'kt-vd', 'Valais': 'kt-vs', 'Genève': 
                 'Lucerne': 'kt-lu', 'Uri': 'kt-ur', 'Schwyz': 'kt-sz', 'Obwald': 'kt-ow', 'Nidwald': 'kt-nw',
                 'Tessin': 'kt-ti'}
 
-df_chomage_fin = df_chomage_precis[['GEO','OBS_VALUE']].replace(cantons_dict)
+
+def f(a, b, c, d, e):
+    display(a)
+    display(b)
+    display(c)
+    display(d)
+    display(e)
+
+   # recherche des données correspondantes aux en-têtes choisies
+    df_chomage_precis = df_chomage.query("TIME_PERIOD==@b and UNIT_MEA == @c and POP1564 == @d and ERWL == @e")
+    df_chomage_fin = df_chomage_precis[['GEO','OBS_VALUE']].replace(cantons_dict)
 
 
-liste_code = df_chomage_fin['GEO']
-liste_valeur = df_chomage_fin['OBS_VALUE']
-
-
-
-dicto = dict(zip(liste_code, liste_valeur))
-
-
-ch_chart = pygal.maps.ch.Cantons()
-ch_chart.title = 'Chomage des cantons'
-ch_chart.add('chomeurs', dicto)
-
-carte_suisse=ch_chart.render(is_unicode=True)
-
-display(HTML(base_html.format(rendered_chart=carte_suisse)))
+    liste_code = df_chomage_fin['GEO']
+    liste_valeur = df_chomage_fin['OBS_VALUE']
 
 
 
+    dicto = dict(zip(liste_code, liste_valeur))
 
-#     reste à faire:
-# rendre le code joli
-# ajouter les titres
-# interact
-# LANGUE
+    #création de la carte
+    ch_chart = pygal.maps.ch.Cantons()
+    ch_chart.title = 'Chomage des cantons en ' + str(b)
+    ch_chart.add('chomeurs', dicto)
+
+    carte_suisse=ch_chart.render(is_unicode=True)
+
+    display(HTML(base_html.format(rendered_chart=carte_suisse)))
+#mise en interaction des widgets avec la carte
+interact(f,a = widgets.RadioButtons(options = ['FR', 'EN', 'DE','IT'] , description = 'Langue:', disabled = False), b=widgets.IntSlider(min = 2010, max = 2020, step = 1, description = 'time', disabled = False, orientation = 'horizontal'), c = widgets.Dropdown(options = ['Nombre de personnes', 'Nombre de ménages','Pourcentage de personnes'], description = 'unit', disabled = False), d = widgets.Dropdown(options = ['Pop. résid. perm. de 15 à 64 ans', 'Total'], description = 'population'), e = widgets.Dropdown(options = ['Autres personnes', 'Personnes au chômage', 'Total'], description = 'chomage'))
